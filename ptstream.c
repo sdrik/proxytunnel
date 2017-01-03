@@ -292,9 +292,9 @@ int stream_enable_ssl(PTSTREAM *pts, const char *proxy_arg) {
 
 	/* SNI support */
 	if ( args_info.verbose_flag ) {
-           message( "Set SNI hostname to %s\n", args_info.proxyhost_arg );
+           message( "Set SNI hostname to %s\n", args_info.host_arg ? args_info.host_arg : (args_info.dest_arg ? args_info.dest_arg : args_info.proxyhost_arg) );
     }
-	res = SSL_set_tlsext_host_name(ssl,args_info.proxyhost_arg);
+	res = SSL_set_tlsext_host_name(ssl,args_info.host_arg ? args_info.host_arg : (args_info.dest_arg ? args_info.dest_arg : args_info.proxyhost_arg));
 	if (res < 0) {
 	   message( "TLS SNI error, giving up: SSL_set_tlsext_host_name returned error message:\n  %u\n", res );
 	   exit( 1 );
