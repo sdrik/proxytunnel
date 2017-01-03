@@ -79,6 +79,11 @@ struct gengetopt_args_info {
 	int enforcetls1_given;   /* Wheter to enforce TLSv1 */
 	int host_given;         /* Wheter we override the Host Header */
 	int cacert_given;		/* Whether cacert was given */
+	int ssl_ciphers_given;		/* Whether ciphers list was given */
+	char *ssl_ciphers_arg;		/* Override default ciphers list */
+	int tls_padding_flag;		/* Whether TLS padding extension should be enabled */
+	int tls_alpn_flag;		/* Whether TLS ALPN extension should be enabled */
+	int no_tls_comp_flag;		/* Whether TLS compression should be disabled */
 };
 
 int cmdline_parser( int argc, char * const *argv, struct gengetopt_args_info *args_info );

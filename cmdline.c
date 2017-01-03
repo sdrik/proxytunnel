@@ -67,6 +67,10 @@ void cmdline_parser_print_help (void) {
 #ifdef USE_SSL
 " -z, --no-check-certficate Don't verify server SSL certificate\n"
 " -C, --cacert=STRING       Path to trusted CA certificate or directory\n"
+" -0, --padding             Enable TLS padding extention\n"
+" -A, --alpn                Enable TLS ALPN extention\n"
+" -Z, --no-tls-comp         Disable TLS compression\n"
+" -c, --ciphers=STRING      Use provided cipher list\n"
 #endif
 " -F, --passfile=STRING     File with credentials for proxy authentication\n"
 " -P, --proxyauth=STRING    Proxy auth credentials user:pass combination\n"
@@ -142,6 +146,7 @@ int cmdline_parser( int argc, char * const *argv, struct gengetopt_args_info *ar
 	args_info->enforcetls1_given = 0;
 	args_info->host_given = 0;
 	args_info->cacert_given = 0;
+	args_info->ssl_ciphers_given = 0;
 
 /* No... we can't make this a function... -- Maniac */
 #define clear_args() \
@@ -172,6 +177,10 @@ int cmdline_parser( int argc, char * const *argv, struct gengetopt_args_info *ar
 	args_info->host_arg = NULL; \
 	args_info->no_check_cert_flag = 0; \
 	args_info->cacert_arg = NULL; \
+	args_info->ssl_ciphers_arg = NULL; \
+	args_info->no_tls_comp_flag = 0; \
+	args_info->tls_padding_flag = 0; \
+	args_info->tls_alpn_flag = 0; \
 }
 
 	clear_args();
@@ -218,12 +227,16 @@ int cmdline_parser( int argc, char * const *argv, struct gengetopt_args_info *ar
 			{ "no-ssl3",		0, NULL, 'T' },
 			{ "no-check-certificate",0,NULL,'z' },
 			{ "cacert",         1, NULL, 'C' },
+			{ "ciphers",		1, NULL, 'c' },
+			{ "alpn",		0, NULL, 'A' },
+			{ "no-tls-comp",	0, NULL, 'Z' },
+			{ "padding",		0, NULL, '0' },
 			{ NULL,				0, NULL, 0 }
 		};
 
-		c = getopt_long (argc, argv, "hVia:u:s:t:F:p:P:r:R:d:H:x:nvNeEXqLo:TzC:", long_options, &option_index);
+		c = getopt_long (argc, argv, "hVia:u:s:t:F:p:P:r:R:d:H:x:nvNeEXqLo:TzC:c:AZ0", long_options, &option_index);
 #else
-		c = getopt( argc, argv, "hVia:u:s:t:F:p:P:r:R:d:H:x:nvNeEXqLo:TzC:" );
+		c = getopt( argc, argv, "hVia:u:s:t:F:p:P:r:R:d:H:x:nvNeEXqLo:TzC:c:AZ0" );
 #endif
 
 		if (c == -1)
@@ -455,6 +468,30 @@ int cmdline_parser( int argc, char * const *argv, struct gengetopt_args_info *ar
 				args_info->cacert_given = 1;
 				args_info->cacert_arg = gengetopt_strdup (optarg);
 				break;
+
+#ifdef USE_SSL
+			case 'c':	/* SSL ciphers list */
+				if (args_info->ssl_ciphers_given) {
+					fprintf (stderr, "%s: `--ciphers' (`-c') option given more than once\n", PACKAGE);
+					clear_args ();
+					exit(1);
+				}
+				args_info->ssl_ciphers_given = 1;
+				args_info->ssl_ciphers_arg = gengetopt_strdup (optarg);
+				break;
+
+			case '0':	/* Turn on TLS padding extension.  */
+				args_info->tls_padding_flag = !(args_info->tls_padding_flag);
+				break;
+
+			case 'A':	/* Turn on TLS ALPN extension.  */
+				args_info->tls_alpn_flag = !(args_info->tls_alpn_flag);
+				break;
+
+			case 'Z':	/* Turn off TLS compression.  */
+				args_info->no_tls_comp_flag = !(args_info->no_tls_comp_flag);
+				break;
+#endif
 
 			case 0:	/* Long option with no short option */
 

@@ -264,16 +264,19 @@ int stream_enable_ssl(PTSTREAM *pts, const char *proxy_arg) {
 	if (args_info.no_ssl3_flag) {
 		ssl_options |= SSL_OP_NO_SSLv3;
 	}
-	ssl_options |= SSL_OP_NO_COMPRESSION;
-	ssl_options |= SSL_OP_TLSEXT_PADDING;
+	if (args_info.no_tls_comp_flag) {
+		ssl_options |= SSL_OP_NO_COMPRESSION;
+	}
+	if (args_info.tls_padding_flag) {
+		ssl_options |= SSL_OP_TLSEXT_PADDING;
+	}
 	SSL_CTX_set_options (ctx, ssl_options);
 
-	unsigned char protos[] = {
-		   2, 'h', '2',
-		   8, 'h', 't', 't', 'p', '/', '1', '.', '1'
-	};
-	unsigned int protos_len = sizeof(protos);
-	SSL_CTX_set_alpn_protos(ctx, protos, protos_len);
+	if (args_info.tls_alpn_flag) {
+		unsigned char protos[] = { 8, 'h', 't', 't', 'p', '/', '1', '.', '1' };
+		unsigned int protos_len = sizeof(protos);
+		SSL_CTX_set_alpn_protos(ctx, protos, protos_len);
+	}
 
 	if ( !args_info.no_check_cert_flag ) {
 		if ( args_info.cacert_given ) {
@@ -295,9 +298,10 @@ int stream_enable_ssl(PTSTREAM *pts, const char *proxy_arg) {
 	}
 
 	ssl = SSL_new (ctx);
-	
-	const char* const PREFERRED_CIPHERS = "DEFAULT:!RC4:!DH";
-	SSL_set_cipher_list(ssl, PREFERRED_CIPHERS);
+
+	if (args_info.ssl_ciphers_given) {
+		SSL_set_cipher_list(ssl, args_info.ssl_ciphers_arg);
+	}
 
 	SSL_set_rfd (ssl, stream_get_incoming_fd(pts));
 	SSL_set_wfd (ssl, stream_get_outgoing_fd(pts));	
