@@ -296,7 +296,7 @@ int stream_enable_ssl(PTSTREAM *pts, const char *proxy_arg) {
 
 	ssl = SSL_new (ctx);
 	
-	const char* const PREFERRED_CIPHERS = "DEFAULT:!RC4";
+	const char* const PREFERRED_CIPHERS = "DEFAULT:!RC4:!DH";
 	SSL_set_cipher_list(ssl, PREFERRED_CIPHERS);
 
 	SSL_set_rfd (ssl, stream_get_incoming_fd(pts));
